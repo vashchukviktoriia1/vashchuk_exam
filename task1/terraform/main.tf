@@ -68,7 +68,7 @@ resource "digitalocean_droplet" "vashchuk_node" {
 
 # Spaces Bucket
 resource "digitalocean_spaces_bucket" "vashchuk_bucket" {
-  name   = "vashchuk-bucket"
+  name   = "vashchuk-viktoriia-bucket"
   region = "fra1"
   acl    = "private"
 }
