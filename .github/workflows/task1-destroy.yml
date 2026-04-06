@@ -1,0 +1,36 @@
+name: Task1 - Terraform Destroy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  destroy:
+    name: Terraform Destroy
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: task1/terraform
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.DO_SPACES_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.DO_SPACES_SECRET_KEY }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.0
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Destroy
+        run: |
+          terraform destroy -auto-approve \
+            -var="do_token=${{ secrets.DO_TOKEN }}" \
+            -var="spaces_access_key=${{ secrets.DO_SPACES_ACCESS_KEY }}" \
+            -var="spaces_secret_key=${{ secrets.DO_SPACES_SECRET_KEY }}"
