@@ -23,6 +23,7 @@
           - gnupg
           - conntrack
           - socat
+          - cri-tools
         state: present
 
     - name: Download kubectl
