@@ -1,4 +1,4 @@
-name: Task3 - Deploy App
+﻿name: Task3 - Deploy App
 
 on:
   workflow_dispatch:
@@ -62,15 +62,14 @@ jobs:
       - name: Deploy dev environment
         if: ${{ github.event.inputs.environment == 'dev' || github.event.inputs.environment == 'both' }}
         run: |
-          ssh -i /tmp/ssh_key -o StrictHostKeyChecking=no root@${{ secrets.VM_IP }} << 'EOF'
+          ssh -i /tmp/ssh_key -o StrictHostKeyChecking=no root@${{ secrets.VM_IP }} bash << 'EOF'
             set -e
             echo "Deploying DEV..."
             kubectl create namespace dev --dry-run=client -o yaml | kubectl apply -f -
             kubectl apply -f /root/k8s/dev-deployment.yml
             kubectl rollout status deployment/app-dev -n dev
-
-            # Kill old port-forward on 8002
             pkill -f "port-forward.*8002" || true
+            sleep 2
             nohup kubectl port-forward svc/app-dev-service 8002:8002 -n dev --address 0.0.0.0 > /tmp/pf-dev.log 2>&1 &
             sleep 3
             echo "DEV deployed on port 8002"
@@ -79,15 +78,14 @@ jobs:
       - name: Deploy release environment
         if: ${{ github.event.inputs.environment == 'release' || github.event.inputs.environment == 'both' }}
         run: |
-          ssh -i /tmp/ssh_key -o StrictHostKeyChecking=no root@${{ secrets.VM_IP }} << 'EOF'
+          ssh -i /tmp/ssh_key -o StrictHostKeyChecking=no root@${{ secrets.VM_IP }} bash << 'EOF'
             set -e
             echo "Deploying RELEASE..."
             kubectl create namespace release --dry-run=client -o yaml | kubectl apply -f -
             kubectl apply -f /root/k8s/release-deployment.yml
             kubectl rollout status deployment/app-release -n release
-
-            # Kill old port-forward on 8003
             pkill -f "port-forward.*8003" || true
+            sleep 2
             nohup kubectl port-forward svc/app-release-service 8003:8003 -n release --address 0.0.0.0 > /tmp/pf-release.log 2>&1 &
             sleep 3
             echo "RELEASE deployed on port 8003"
