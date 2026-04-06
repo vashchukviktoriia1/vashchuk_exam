@@ -31,6 +31,7 @@ jobs:
         with:
           context: .
           push: true
+          # Використовуємо тег develop згідно з умовою 
           tags: viktoriiavashchuk/vashchukapp:develop
 
       - name: Checkout tag 1.0.0
@@ -44,6 +45,7 @@ jobs:
         with:
           context: .
           push: true
+          # Використовуємо тег 1.0.0 згідно з умовою 
           tags: viktoriiavashchuk/vashchukapp:1.0.0
 
   deploy:
@@ -60,23 +62,40 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > /tmp/ssh_key
           chmod 600 /tmp/ssh_key
 
-
       - name: Deploy dev environment
         if: ${{ github.event.inputs.environment == 'dev' || github.event.inputs.environment == 'both' }}
         run: |
           ssh -i /tmp/ssh_key -o StrictHostKeyChecking=no root@${{ secrets.VM_IP }} << 'EOF'
+            # Створення namespace 
             kubectl create namespace dev --dry-run=client -o yaml | kubectl apply -f -
+            
+            # Розгортання [cite: 49]
             kubectl apply -f /root/k8s/dev-deployment.yml
+            
+            # Перевірка готовності [cite: 61]
             kubectl rollout status deployment/app-dev -n dev
-            kubectl port-forward svc/app-dev-service 8002:8000 -n dev --address=0.0.0.0 &
+            
+            # Прокидання порту (виправлено Broken pipe)
+            # Використовуємо порт 8002 для dev 
+            nohup kubectl port-forward svc/app-dev-service 8002:8000 -n dev --address=0.0.0.0 > /dev/null 2>&1 &
+            sleep 2
           EOF
 
       - name: Deploy release environment
         if: ${{ github.event.inputs.environment == 'release' || github.event.inputs.environment == 'both' }}
         run: |
           ssh -i /tmp/ssh_key -o StrictHostKeyChecking=no root@${{ secrets.VM_IP }} << 'EOF'
+            # Створення namespace 
             kubectl create namespace release --dry-run=client -o yaml | kubectl apply -f -
+            
+            # Розгортання [cite: 49]
             kubectl apply -f /root/k8s/release-deployment.yml
+            
+            # Перевірка готовності [cite: 61]
             kubectl rollout status deployment/app-release -n release
-            kubectl port-forward svc/app-release-service 8003:8000 -n release --address=0.0.0.0 &
+            
+            # Прокидання порту (виправлено Broken pipe)
+            # Використовуємо порт 8003 для release 
+            nohup kubectl port-forward svc/app-release-service 8003:8000 -n release --address=0.0.0.0 > /dev/null 2>&1 &
+            sleep 2
           EOF
