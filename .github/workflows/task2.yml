@@ -1,0 +1,70 @@
+name: Task2 - Install K8s Components
+
+on:
+  workflow_dispatch:
+    inputs:
+      node_ip:
+        description: 'Target node IP address'
+        required: true
+        default: '167.172.180.121'
+      node_user:
+        description: 'SSH username'
+        required: true
+        default: 'root'
+
+jobs:
+  ansible-check:
+    name: Dry-Run Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Ansible and sshpass
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y ansible sshpass
+
+      - name: Create inventory file
+        run: |
+          cat > task2/ansible/inventory.ini <<EOF
+          [nodes]
+          ${{ github.event.inputs.node_ip }} ansible_user=${{ github.event.inputs.node_user }} ansible_ssh_pass=${{ secrets.NODE_PASSWORD }} ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+          EOF
+
+      - name: Run Ansible dry-run
+        run: |
+          ansible-playbook \
+            -i task2/ansible/inventory.ini \
+            task2/ansible/playbook.yml \
+            --check
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+
+  ansible-install:
+    name: Install K8s Components
+    runs-on: ubuntu-latest
+    needs: ansible-check
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Ansible and sshpass
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y ansible sshpass
+
+      - name: Create inventory file
+        run: |
+          cat > task2/ansible/inventory.ini <<EOF
+          [nodes]
+          ${{ github.event.inputs.node_ip }} ansible_user=${{ github.event.inputs.node_user }} ansible_ssh_pass=${{ secrets.NODE_PASSWORD }} ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+          EOF
+
+      - name: Run Ansible playbook
+        run: |
+          ansible-playbook \
+            -i task2/ansible/inventory.ini \
+            task2/ansible/playbook.yml
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"

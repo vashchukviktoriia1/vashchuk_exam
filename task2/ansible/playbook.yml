@@ -1,0 +1,88 @@
+---
+- name: Install Kubernetes, Minikube, Helm and dependencies
+  hosts: nodes
+  become: true
+  gather_facts: true
+
+  vars:
+    kubectl_version: "v1.29.0"
+
+  tasks:
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install required dependencies
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - conntrack
+          - socat
+        state: present
+
+    - name: Download kubectl
+      get_url:
+        url: "https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/amd64/kubectl"
+        dest: /usr/local/bin/kubectl
+        mode: '0755'
+
+    - name: Verify kubectl
+      command: kubectl version --client
+      changed_when: false
+
+    - name: Download Minikube
+      get_url:
+        url: "https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64"
+        dest: /usr/local/bin/minikube
+        mode: '0755'
+
+    - name: Start Minikube
+      command: minikube start --driver=none --kubernetes-version={{ kubectl_version }}
+      environment:
+        MINIKUBE_HOME: /root
+        CHANGE_MINIKUBE_NONE_USER: "true"
+
+    - name: Verify Minikube
+      command: minikube status
+      changed_when: false
+
+    - name: Install Helm
+      shell: curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      args:
+        creates: /usr/local/bin/helm
+
+    - name: Verify Helm
+      command: helm version
+      changed_when: false
+
+    - name: Enable Minikube dashboard
+      command: minikube addons enable dashboard
+      changed_when: false
+
+    - name: Create kubectl proxy service
+      copy:
+        dest: /etc/systemd/system/kubectl-proxy.service
+        content: |
+          [Unit]
+          Description=kubectl proxy
+          After=network.target
+
+          [Service]
+          ExecStart=/usr/local/bin/kubectl proxy --port=8001 --address=0.0.0.0 --accept-hosts='.*'
+          Restart=always
+          User=root
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Start kubectl proxy service
+      systemd:
+        name: kubectl-proxy
+        enabled: yes
+        state: started
+        daemon_reload: yes
