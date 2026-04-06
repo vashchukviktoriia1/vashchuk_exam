@@ -9,12 +9,13 @@ terraform {
   backend "s3" {
     endpoint                    = "https://fra1.digitaloceanspaces.com"
     region                      = "us-east-1"
-    bucket                      = "vashchuk-tfstate"
+    bucket                      = "vashchuk-v-tfstate"
     key                         = "terraform.tfstate"
     skip_credentials_validation = true
     skip_metadata_api_check     = true
     skip_region_validation      = true
     force_path_style            = true
+    skip_requesting_account_id  = true
   }
 }
 
