@@ -86,3 +86,4 @@
         enabled: yes
         state: started
         daemon_reload: yes
+      ignore_errors: yes
