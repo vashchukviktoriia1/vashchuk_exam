@@ -23,8 +23,14 @@
           - gnupg
           - conntrack
           - socat
-          - cri-tools
         state: present
+
+    - name: Install crictl
+      shell: |
+        VERSION="v1.29.0"
+        curl -L https://github.com/kubernetes-sigs/cri-tools/releases/download/${VERSION}/crictl-${VERSION}-linux-amd64.tar.gz | tar -xz -C /usr/local/bin
+      args:
+        creates: /usr/local/bin/crictl
 
     - name: Download kubectl
       get_url:
