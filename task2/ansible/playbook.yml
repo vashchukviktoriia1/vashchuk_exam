@@ -31,6 +31,7 @@
         curl -L https://github.com/kubernetes-sigs/cri-tools/releases/download/{{ crictl_version }}/crictl-{{ crictl_version }}-linux-amd64.tar.gz | tar -xz -C /usr/local/bin
       args:
         creates: /usr/local/bin/crictl
+      check_mode: no
 
     - name: Download kubectl
       get_url:
@@ -41,6 +42,8 @@
     - name: Verify kubectl
       command: kubectl version --client
       changed_when: false
+      check_mode: no
+      ignore_errors: yes
 
     - name: Download Minikube
       get_url:
@@ -53,23 +56,31 @@
       environment:
         MINIKUBE_HOME: /root
         CHANGE_MINIKUBE_NONE_USER: "true"
+      check_mode: no
 
     - name: Verify Minikube
       command: minikube status
       changed_when: false
+      check_mode: no
+      ignore_errors: yes
 
     - name: Install Helm
       shell: curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
       args:
         creates: /usr/local/bin/helm
+      check_mode: no
 
     - name: Verify Helm
       command: helm version
       changed_when: false
+      check_mode: no
+      ignore_errors: yes
 
     - name: Enable Minikube dashboard
       command: minikube addons enable dashboard
       changed_when: false
+      check_mode: no
+      ignore_errors: yes
 
     - name: Create kubectl proxy service
       copy:
