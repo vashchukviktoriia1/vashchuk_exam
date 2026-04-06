@@ -39,12 +39,6 @@
         enabled: yes
         state: started
 
-    - name: Add user to docker group
-      user:
-        name: root
-        groups: docker
-        append: yes
-
     - name: Install crictl
       shell: |
         curl -L https://github.com/kubernetes-sigs/cri-tools/releases/download/{{ crictl_version }}/crictl-{{ crictl_version }}-linux-amd64.tar.gz | tar -xz -C /usr/local/bin
@@ -70,11 +64,15 @@
         dest: /usr/local/bin/minikube
         mode: '0755'
 
+    - name: Delete old minikube cluster if exists
+      command: minikube delete
+      check_mode: no
+      ignore_errors: yes
+
     - name: Start Minikube
       command: minikube start --driver=docker --force --kubernetes-version={{ kubectl_version }}
       environment:
         MINIKUBE_HOME: /root
-        CHANGE_MINIKUBE_NONE_USER: "true"
         HOME: /root
       check_mode: no
 
@@ -98,6 +96,8 @@
 
     - name: Enable Minikube dashboard
       command: minikube addons enable dashboard
+      environment:
+        HOME: /root
       changed_when: false
       check_mode: no
       ignore_errors: yes
