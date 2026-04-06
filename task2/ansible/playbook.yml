@@ -6,6 +6,7 @@
 
   vars:
     kubectl_version: "v1.29.0"
+    crictl_version: "v1.29.0"
 
   tasks:
 
@@ -27,8 +28,7 @@
 
     - name: Install crictl
       shell: |
-        VERSION="v1.29.0"
-        curl -L https://github.com/kubernetes-sigs/cri-tools/releases/download/${VERSION}/crictl-${VERSION}-linux-amd64.tar.gz | tar -xz -C /usr/local/bin
+        curl -L https://github.com/kubernetes-sigs/cri-tools/releases/download/{{ crictl_version }}/crictl-{{ crictl_version }}-linux-amd64.tar.gz | tar -xz -C /usr/local/bin
       args:
         creates: /usr/local/bin/crictl
 
