@@ -2,7 +2,7 @@
 resource "digitalocean_vpc" "vashchuk_vpc" {
   name     = "vashchuk-vpc"
   region   = "fra1"
-  ip_range = "10.10.10.0/24"
+  ip_range = "10.10.20.0/24"
 }
 
 # Firewall
