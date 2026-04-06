@@ -68,10 +68,10 @@ jobs:
             kubectl apply -f /root/k8s/dev-deployment.yml
             kubectl rollout status deployment/app-dev -n dev
             
-            # Очищення порту 8002 перед запуском (щоб не було помилки Address already in use)
-            fuser -k 8002/tcp || true
+            # Надійне звільнення порту 8002 (вбиваємо старі процеси port-forward)
+            sudo lsof -t -i:8002 | xargs -r sudo kill -9 || true
             
-            # Запуск port-forward у фоні з повним відв'язуванням від терміналу
+            # Запуск port-forward у фоні
             nohup kubectl port-forward svc/app-dev-service 8002:8000 -n dev --address=0.0.0.0 > /dev/null 2>&1 &
             
             sleep 2
@@ -88,8 +88,8 @@ jobs:
             kubectl apply -f /root/k8s/release-deployment.yml
             kubectl rollout status deployment/app-release -n release
             
-            # Очищення порту 8003
-            fuser -k 8003/tcp || true
+            # Надійне звільнення порту 8003
+            sudo lsof -t -i:8003 | xargs -r sudo kill -9 || true
             
             # Запуск port-forward у фоні
             nohup kubectl port-forward svc/app-release-service 8003:8000 -n release --address=0.0.0.0 > /dev/null 2>&1 &
